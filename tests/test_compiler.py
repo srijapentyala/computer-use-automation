@@ -62,3 +62,41 @@ def test_compiler_parameterizes_member_id_and_redacts_password():
     assert "teller" not in dumped or cap.steps[0].input.secret_env == "COREBANK_USER"
     assert any(o.code == "MEMBER_NOT_FOUND" for o in cap.outcomes)
     assert cap.schema_version == "1.0.0"
+
+
+def test_compiler_adds_member_record_checkpoint_for_llm_output_names():
+    trace = [
+        TraceStep(
+            ActionType.CLICK,
+            target=_target("Go"),
+            thought="Submit member lookup.",
+        ),
+        TraceStep(
+            ActionType.CLICK,
+            target=Target(
+                locators=[
+                    Locator(
+                        strategy=LocatorStrategy.ROLE_NAME,
+                        role="link",
+                        name="View Record",
+                        confidence=0.9,
+                        why="test",
+                    )
+                ],
+                frame="main",
+            ),
+            thought="Open record.",
+        ),
+    ]
+    cap = compile_capability(
+        "look up member 12345 and read their current savings balance",
+        trace,
+        outputs={"current_savings_balance": "$2,450.00"},
+        entry_url="http://127.0.0.1:8787/",
+    )
+    ids = {c.id for c in cap.checkpoints}
+    assert "has_outputs" in ids
+    assert "on_member_record" in ids
+    assert any(c.text == "Member Record" for c in cap.checkpoints)
+    assert cap.steps[-1].wait.until == "text"
+    assert cap.steps[-1].wait.text == "Member Record"

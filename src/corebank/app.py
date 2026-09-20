@@ -17,17 +17,20 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
 
+from corebank.branding import get_brand
 from corebank.data import MEMBERS, VALID_PASSWORD, VALID_USER, money
 
 ROOT = Path(__file__).parent
-templates = Jinja2Templates(directory=str(ROOT / "templates"))
-templates.env.globals["money"] = money
 
 
-def create_app() -> FastAPI:
-    app = FastAPI(title="Heritage Core Teller Console", docs_url=None, redoc_url=None)
+def create_app(brand_id: str | None = None) -> FastAPI:
+    brand = get_brand(brand_id or os.getenv("COREBANK_BRAND", "heritage"))
+    app = FastAPI(title=f"{brand.product} Teller Console", docs_url=None, redoc_url=None)
     app.add_middleware(SessionMiddleware, secret_key=os.getenv("COREBANK_SECRET", "dev-only"))
     app.mount("/static", StaticFiles(directory=str(ROOT / "static")), name="static")
+    templates = Jinja2Templates(directory=str(ROOT / "templates"))
+    templates.env.globals["money"] = money
+    templates.env.globals["brand"] = brand
 
     def logged_in(request: Request) -> bool:
         return bool(request.session.get("user"))
@@ -219,7 +222,7 @@ def create_app() -> FastAPI:
 
     @app.get("/health")
     def health():
-        return {"ok": True, "app": "heritage_core"}
+        return {"ok": True, "app": "heritage_core", "brand": brand.id}
 
     return app
 

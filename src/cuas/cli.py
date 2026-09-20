@@ -66,10 +66,14 @@ def _start_corebank(host: str, port: int) -> None:
 def target(
     host: str = typer.Option("127.0.0.1"),
     port: int = typer.Option(8787),
+    brand: str = typer.Option("heritage", help="heritage | first_cu"),
 ):
     """Run the Heritage Core teller-console stand-in."""
-    console.print(f"Heritage Core on http://{host}:{port}/  (teller / teller)")
-    uvicorn.run("corebank.app:app", host=host, port=port, reload=False)
+    from corebank.app import create_app as create_core
+
+    core = create_core(brand)
+    console.print(f"{brand} Heritage Core on http://{host}:{port}/  (teller / teller)")
+    uvicorn.run(core, host=host, port=port, reload=False)
 
 
 @app.command()
@@ -139,6 +143,9 @@ def replay(
         os.environ.setdefault("COREBANK_USER", "teller")
         os.environ.setdefault("COREBANK_PASSWORD", "teller")
         cap = Capability.model_validate_json(artifact.read_text())
+        from cuas.tenant import apply_overrides
+
+        cap = apply_overrides(cap)
         if url:
             cap.app.entry_url = url
         run_id = "replay-" + uuid4().hex[:8]

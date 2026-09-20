@@ -23,7 +23,7 @@
       "name": "member_id",
       "type": "string",
       "required": true,
-      "description": "Input captured during discovery (The user wants to look up member 12345. I have logged in and am on the Member Inquiry page. I need to enter the Member ID into the 'Member ID:' field and click 'Go'.)",
+      "description": "Caller-supplied member identifier.",
       "pattern": "^[0-9]{4,8}$",
       "enum": null,
       "example": "12345",
@@ -308,8 +308,8 @@
       "navigate_url": null,
       "key": null,
       "wait": {
-        "until": "visible",
-        "text": null,
+        "until": "text",
+        "text": "matching",
         "url_contains": null,
         "timeout_ms": 8000
       },
@@ -363,8 +363,8 @@
       "navigate_url": null,
       "key": null,
       "wait": {
-        "until": "visible",
-        "text": null,
+        "until": "text",
+        "text": "Member Record",
         "url_contains": null,
         "timeout_ms": 8000
       },
@@ -379,6 +379,15 @@
       "description": "Replay produced the declared outputs or a known business outcome.",
       "assert_kind": "text_contains",
       "text": "",
+      "url_contains": null,
+      "target": null
+    },
+    {
+      "id": "on_member_record",
+      "after_step": null,
+      "description": "Member record screen is showing.",
+      "assert_kind": "text_contains",
+      "text": "Member Record",
       "url_contains": null,
       "target": null
     }

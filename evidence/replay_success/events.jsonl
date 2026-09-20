@@ -1,9 +1,9 @@
-{"ts": "2026-09-20T13:16:55.800762+00:00", "n": 1, "event": "replay_start", "capability_id": "heritage_core.lookup_savings_balance", "params": {"member_id": "12345"}}
-{"ts": "2026-09-20T13:16:56.191310+00:00", "n": 2, "event": "step_ok", "step_id": "s1_type", "action": "type"}
-{"ts": "2026-09-20T13:16:56.434314+00:00", "n": 3, "event": "step_ok", "step_id": "s2_type", "action": "type"}
-{"ts": "2026-09-20T13:16:57.106193+00:00", "n": 4, "event": "step_ok", "step_id": "s3_click", "action": "click"}
-{"ts": "2026-09-20T13:16:57.806994+00:00", "n": 5, "event": "step_ok", "step_id": "s4_click", "action": "click"}
-{"ts": "2026-09-20T13:16:58.081308+00:00", "n": 6, "event": "step_ok", "step_id": "s5_type", "action": "type"}
-{"ts": "2026-09-20T13:16:58.733669+00:00", "n": 7, "event": "step_ok", "step_id": "s6_click", "action": "click"}
-{"ts": "2026-09-20T13:16:59.398718+00:00", "n": 8, "event": "step_ok", "step_id": "s7_click", "action": "click"}
-{"ts": "2026-09-20T13:16:59.462016+00:00", "n": 9, "event": "replay_done", "result": {"kind": "success", "capability_id": "heritage_core.lookup_savings_balance", "goal": null, "outputs": {"current_savings_balance": "$2,450.00"}, "business_code": null, "business_message": null, "error": null, "intervention_id": null, "evidence_dir": "evidence/replay_success", "steps_executed": 7, "llm_calls": 0}}
+{"ts": "2026-09-20T13:30:45.254548+00:00", "n": 1, "event": "replay_start", "capability_id": "heritage_core.lookup_savings_balance", "tenant": null, "params": {"member_id": "12345"}}
+{"ts": "2026-09-20T13:30:45.690023+00:00", "n": 2, "event": "step_ok", "step_id": "s1_type", "action": "type"}
+{"ts": "2026-09-20T13:30:45.944802+00:00", "n": 3, "event": "step_ok", "step_id": "s2_type", "action": "type"}
+{"ts": "2026-09-20T13:30:46.621996+00:00", "n": 4, "event": "step_ok", "step_id": "s3_click", "action": "click"}
+{"ts": "2026-09-20T13:30:47.320424+00:00", "n": 5, "event": "step_ok", "step_id": "s4_click", "action": "click"}
+{"ts": "2026-09-20T13:30:47.594968+00:00", "n": 6, "event": "step_ok", "step_id": "s5_type", "action": "type"}
+{"ts": "2026-09-20T13:30:48.260088+00:00", "n": 7, "event": "step_ok", "step_id": "s6_click", "action": "click"}
+{"ts": "2026-09-20T13:30:48.952931+00:00", "n": 8, "event": "step_ok", "step_id": "s7_click", "action": "click"}
+{"ts": "2026-09-20T13:30:49.008832+00:00", "n": 9, "event": "replay_done", "result": {"kind": "success", "capability_id": "heritage_core.lookup_savings_balance", "goal": null, "outputs": {"current_savings_balance": "$2,450.00"}, "business_code": null, "business_message": null, "error": null, "intervention_id": null, "evidence_dir": "evidence/replay_success", "steps_executed": 7, "llm_calls": 0}}

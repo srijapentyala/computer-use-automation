@@ -1,3 +1,7 @@
+import asyncio
+
+import pytest
+
 from cuas.handoff.session import LiveSession
 from cuas.models import ControlOwner
 
@@ -25,3 +29,19 @@ def test_control_transfer_pause_and_resume():
     assert session._resume.is_set()
     assert session.intervention.status == "resolved"
     assert session.intervention.resolution
+
+
+@pytest.mark.asyncio
+async def test_wait_unblocks_after_operator_hands_back():
+    session = LiveSession(session_id="wait")
+    session.request_intervention("irreversible blocked", goal="transfer")
+
+    async def operator():
+        await asyncio.sleep(0.05)
+        session.take_control("alice")
+        session.hand_back("declined the post")
+
+    asyncio.create_task(operator())
+    await session.wait_if_human_in_control(timeout=2)
+    assert session.in_automation
+    assert session.intervention.status == "resolved"

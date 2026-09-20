@@ -33,8 +33,11 @@ class LiveSession:
     def in_automation(self) -> bool:
         return self.owner is ControlOwner.AUTOMATION
 
-    async def wait_if_human_in_control(self) -> None:
-        await self._resume.wait()
+    async def wait_if_human_in_control(self, timeout: float | None = None) -> None:
+        try:
+            await asyncio.wait_for(self._resume.wait(), timeout=timeout)
+        except TimeoutError:
+            self.abort("handoff timed out waiting for an operator")
 
     def request_intervention(
         self,

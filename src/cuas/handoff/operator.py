@@ -101,7 +101,8 @@ def create_operator_app(session: LiveSession, surface: WebSurface | None = None)
         session.record_human({"type": action, "ref": ref, "value": value})
         surface = app.state.surface
         if surface is not None:
-            obs = app.state.last_obs or await surface.observe()
+            obs = await surface.observe()
+            app.state.last_obs = obs
             target: Target | None = None
             if ref:
                 target = surface.locators_for_ref(obs, ref)

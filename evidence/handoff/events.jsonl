@@ -1,0 +1,3 @@
+{"ts": "2026-09-20T13:30:58.077133+00:00", "n": 1, "event": "policy_block", "code": "IRREVERSIBLE_BLOCKED", "message": "Irreversible action requires a human decision (policy on_match=escalate)"}
+{"ts": "2026-09-20T13:30:58.122171+00:00", "n": 2, "event": "escalated", "reason": "Irreversible action blocked by policy: Submit Transfer", "intervention_id": "a83af70f2f49"}
+{"ts": "2026-09-20T13:30:58.815148+00:00", "n": 3, "event": "handoff_resumed", "intervention_id": "a83af70f2f49"}

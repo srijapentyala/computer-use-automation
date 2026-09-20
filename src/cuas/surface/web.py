@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import re
+import time
 from typing import Any
 
 from playwright.async_api import Browser, BrowserContext, Page, async_playwright
@@ -227,6 +228,10 @@ class WebSurface:
         handle = await resolve(self.page, target)
         if action in {ActionType.CLICK, ActionType.DISMISS}:
             await handle.click()
+            try:
+                await self.page.wait_for_load_state("domcontentloaded", timeout=4000)
+            except Exception:  # noqa: BLE001
+                pass
             await self.page.wait_for_timeout(400)
             return {"clicked": True}
         if action is ActionType.TYPE:
@@ -267,6 +272,25 @@ class WebSurface:
             except Exception:  # noqa: BLE001
                 continue
         return "\n".join(parts)
+
+    async def wait_for_text(self, text: str, timeout_ms: int = 8000) -> None:
+        deadline = time.monotonic() + timeout_ms / 1000
+        needle = (text or "").lower()
+        last = ""
+        while time.monotonic() < deadline:
+            last = await self.visible_text()
+            if needle and needle in last.lower():
+                return
+            await self.page.wait_for_timeout(150)
+        raise LocatorError(f"timed out waiting for text {text!r}", tried=[])
+
+    async def wait_for_url(self, fragment: str, timeout_ms: int = 8000) -> None:
+        deadline = time.monotonic() + timeout_ms / 1000
+        while time.monotonic() < deadline:
+            if fragment in (self.page.url or ""):
+                return
+            await self.page.wait_for_timeout(150)
+        raise LocatorError(f"timed out waiting for url containing {fragment!r}", tried=[])
 
     async def screenshot(self, path: str) -> None:
         await self.page.screenshot(path=path, full_page=True)

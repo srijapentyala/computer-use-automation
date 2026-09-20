@@ -18,6 +18,7 @@ from cuas.models import (
     Step,
     StepInput,
     Target,
+    WaitSpec,
 )
 from cuas.safety.redact import redact_text
 
@@ -126,7 +127,11 @@ def compile_capability(
                     params[name] = ParameterSpec(
                         name=name,
                         type="string",
-                        description=f"Input captured during discovery ({redact_text(event.thought)})",
+                        description=(
+                            "Caller-supplied member identifier."
+                            if name == "member_id"
+                            else "Caller-supplied input captured during discovery."
+                        ),
                         example=event.value,
                         pattern=r"^[0-9]{4,8}$" if name == "member_id" else None,
                     )
@@ -169,8 +174,11 @@ def compile_capability(
                 text="",
             )
         )
-        # Concrete UI checkpoint: member record heading if we extracted a balance.
-        if "savings_balance" in (outputs or {}) or "member_name" in (outputs or {}):
+        out_names = {n.lower() for n in (outputs or {})}
+        moneyish = any(str(v).startswith("$") for v in (outputs or {}).values())
+        if moneyish or any(
+            "balance" in n or "member_name" in n or n == "name" for n in out_names
+        ):
             checkpoints.append(
                 Checkpoint(
                     id="on_member_record",
@@ -179,7 +187,7 @@ def compile_capability(
                     text="Member Record",
                 )
             )
-        if "confirmation_number" in (outputs or {}):
+        if any("confirm" in n for n in out_names):
             checkpoints.append(
                 Checkpoint(
                     id="on_confirmation",
@@ -188,6 +196,23 @@ def compile_capability(
                     text="New Account Confirmation",
                 )
             )
+
+    if "balance" in goal.lower() and steps:
+        last_click = next((s for s in reversed(steps) if s.action is ActionType.CLICK), None)
+        if last_click:
+            last_click.wait = WaitSpec(until="text", text="Member Record", timeout_ms=8000)
+        go = next(
+            (
+                s
+                for s in steps
+                if s.action is ActionType.CLICK
+                and s.target
+                and any((loc.name or "").lower() == "go" for loc in s.target.locators)
+            ),
+            None,
+        )
+        if go:
+            go.wait = WaitSpec(until="text", text="matching", timeout_ms=8000)
 
     cap_id = "heritage_core." + slugify(goal if "member" in goal.lower() else "flow")
     if "balance" in goal.lower():

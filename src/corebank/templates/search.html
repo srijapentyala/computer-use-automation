@@ -24,7 +24,7 @@
         </tr>
         <tr>
           <td colspan="2" style="text-align:right">
-            <input class="btn" type="submit" value="Go">
+            <input class="btn" type="submit" value="{{ brand.search_submit }}">
           </td>
         </tr>
       </table>
@@ -45,7 +45,7 @@
           <td>{{ member.member_id }}</td>
           <td>{{ member.name }}</td>
           <td>{{ member.status }}</td>
-          <td><a href="/member?id={{ member.member_id }}">View Record</a></td>
+          <td><a href="/member?id={{ member.member_id }}">{{ brand.view_record }}</a></td>
         </tr>
       </table>
     {% endif %}

@@ -10,7 +10,7 @@ from cuas.agent.llm import LLM, Decision
 from cuas.config import Policy
 from cuas.evidence import EvidenceLog
 from cuas.handoff.session import LiveSession
-from cuas.models import ActionType, Capability, OutcomeKind, RiskClass, RunResult
+from cuas.models import ActionType, Capability, OutcomeKind, RunResult
 from cuas.models.observation import Observation
 from cuas.safety.guardrails import Guardrails, PolicyViolation
 from cuas.safety.redact import redact_text
@@ -45,13 +45,15 @@ class DiscoveryRunner:
         await self.surface.goto(self.start_url)
 
         for i in range(self.policy.max_steps):
-            await self.session.wait_if_human_in_control()
+            await self.session.wait_if_human_in_control(
+                timeout=max(1.0, self.policy.idle_timeout_ms / 1000)
+            )
             if self.session.owner.value == "none":
                 return (
                     RunResult(
                         kind=OutcomeKind.FAILURE,
                         goal=goal,
-                        evidence_dir=str(self.evidence.dir),
+                        evidence_dir=self.evidence.relative_dir(),
                         steps_executed=len(self.trace),
                         llm_calls=getattr(self.llm, "calls", 0),
                     ),
@@ -67,15 +69,23 @@ class DiscoveryRunner:
                 errors=obs.errors,
             )
             if self._is_loop(obs):
-                return await self._escalate(
+                status = await self._handoff(
                     goal, obs, f"observation repeated {self.policy.loop_repeat_limit} times"
                 )
+                if status != "resumed":
+                    return self._escalated_result(goal, self.session.intervention.id if self.session.intervention else None)
+                continue
 
             try:
                 decision = await self.llm.decide(goal, obs, self.history)
             except Exception as exc:  # noqa: BLE001
                 self.evidence.write("llm_error", error=str(exc))
-                return await self._escalate(goal, obs, f"LLM error: {exc}")
+                status = await self._handoff(goal, obs, f"LLM error: {exc}")
+                if status != "resumed":
+                    return self._escalated_result(
+                        goal, self.session.intervention.id if self.session.intervention else None
+                    )
+                continue
 
             hidden = "pass" in (decision.thought or "").lower()
             if decision.ref:
@@ -103,20 +113,31 @@ class DiscoveryRunner:
                 return self._finish(goal, decision)
 
             if decision.action == ActionType.ESCALATE.value:
-                return await self._escalate(goal, obs, decision.reason or decision.thought)
+                status = await self._handoff(goal, obs, decision.reason or decision.thought)
+                if status != "resumed":
+                    return self._escalated_result(
+                        goal, self.session.intervention.id if self.session.intervention else None
+                    )
+                continue
 
             try:
                 await self._apply(decision, obs)
             except PolicyViolation as exc:
                 self.evidence.write("policy_block", code=exc.code, message=str(exc))
                 if exc.code == "IRREVERSIBLE_BLOCKED":
-                    return await self._escalate(goal, obs, str(exc))
+                    status = await self._handoff(goal, obs, str(exc))
+                    if status != "resumed":
+                        return self._escalated_result(
+                            goal,
+                            self.session.intervention.id if self.session.intervention else None,
+                        )
+                    continue
                 return (
                     RunResult(
                         kind=OutcomeKind.FAILURE,
                         goal=goal,
                         error=None,
-                        evidence_dir=str(self.evidence.dir),
+                        evidence_dir=self.evidence.relative_dir(),
                         steps_executed=len(self.trace),
                         llm_calls=getattr(self.llm, "calls", 0),
                     ),
@@ -126,9 +147,19 @@ class DiscoveryRunner:
                 shot = self.evidence.screenshot_path("act_error")
                 await self.surface.screenshot(str(shot))
                 self.evidence.write("act_error", error=str(exc), screenshot=str(shot))
-                return await self._escalate(goal, obs, f"act failed: {exc}")
+                status = await self._handoff(goal, obs, f"act failed: {exc}")
+                if status != "resumed":
+                    return self._escalated_result(
+                        goal, self.session.intervention.id if self.session.intervention else None
+                    )
+                continue
 
-        return await self._escalate(goal, await self.surface.observe(), "max steps exceeded")
+        status = await self._handoff(goal, await self.surface.observe(), "max steps exceeded")
+        if status != "resumed":
+            return self._escalated_result(
+                goal, self.session.intervention.id if self.session.intervention else None
+            )
+        return self._escalated_result(goal, self.session.intervention.id if self.session.intervention else None)
 
     def _is_loop(self, obs: Observation) -> bool:
         """Stuck = same screen AND the same action, several times in a row.
@@ -183,16 +214,28 @@ class DiscoveryRunner:
             goal=goal,
             outputs=decision.outputs,
             business_code=decision.business_code,
-            evidence_dir=str(self.evidence.dir),
+            evidence_dir=self.evidence.relative_dir(),
             steps_executed=len(self.trace),
             llm_calls=getattr(self.llm, "calls", 0),
         )
         self.evidence.write("discovery_done", result=result.model_dump())
         return result, cap
 
-    async def _escalate(
-        self, goal: str, obs: Observation, reason: str
-    ) -> tuple[RunResult, Capability | None]:
+    def _escalated_result(self, goal: str, intervention_id: str | None) -> tuple[RunResult, None]:
+        return (
+            RunResult(
+                kind=OutcomeKind.ESCALATED,
+                goal=goal,
+                intervention_id=intervention_id,
+                evidence_dir=self.evidence.relative_dir(),
+                steps_executed=len(self.trace),
+                llm_calls=getattr(self.llm, "calls", 0),
+            ),
+            None,
+        )
+
+    async def _handoff(self, goal: str, obs: Observation, reason: str) -> str:
+        """Pause on the live session, wait for an operator, then resume or abort."""
         shot = self.evidence.screenshot_path("stuck")
         try:
             await self.surface.screenshot(str(shot))
@@ -206,15 +249,11 @@ class DiscoveryRunner:
             screenshot_path=str(shot) if shot else None,
         )
         self.evidence.write("escalated", reason=reason, intervention_id=req.id)
-        return (
-            RunResult(
-                kind=OutcomeKind.ESCALATED,
-                goal=goal,
-                intervention_id=req.id,
-                evidence_dir=str(self.evidence.dir),
-                steps_executed=len(self.trace),
-                llm_calls=getattr(self.llm, "calls", 0),
-            ),
-            None,
-        )
+        timeout = max(1.0, self.policy.idle_timeout_ms / 1000)
+        await self.session.wait_if_human_in_control(timeout=timeout)
+        if self.session.in_automation:
+            self.evidence.write("handoff_resumed", intervention_id=req.id)
+            return "resumed"
+        self.evidence.write("handoff_aborted", intervention_id=req.id)
+        return "aborted"
 

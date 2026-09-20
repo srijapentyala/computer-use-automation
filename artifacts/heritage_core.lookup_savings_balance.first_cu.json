@@ -2,7 +2,7 @@
   "schema_version": "1.0.0",
   "id": "heritage_core.lookup_savings_balance",
   "name": "Look up member savings balance",
-  "description": "Recorded flow for: look up member 12345 and read their current savings balance. Replay substitutes parameters, uses ranked locators (no LLM), and maps known UI texts to business outcomes.",
+  "description": "Same vendor-recorded lookup, applied to First Credit Union's branded Heritage Core with per-tenant locator overrides (Find Member / Find / Open Record).",
   "version": 1,
   "status": "approved",
   "goal_template": "look up member {member_id} and read their current savings balance",
@@ -14,9 +14,16 @@
     "profile": "heritage_core"
   },
   "tenant": {
-    "scope": "vendor_default",
-    "tenant_id": null,
-    "overrides": {}
+    "scope": "tenant",
+    "tenant_id": "first_cu",
+    "overrides": {
+      "entry_url": "http://127.0.0.1:8786/",
+      "locator_names": {
+        "s4_click": "Find Member",
+        "s6_click": "Find",
+        "s7_click": "Open Record"
+      }
+    }
   },
   "parameters": [
     {

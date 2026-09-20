@@ -1,0 +1,21 @@
+{
+  "kind": "escalated_then_resumed",
+  "intervention_id": "a83af70f2f49",
+  "owner_after": "automation",
+  "human_actions": [
+    {
+      "ts": "2026-09-20T13:30:58.124399+00:00",
+      "type": "take_control",
+      "operator": "operator-alice"
+    },
+    {
+      "ts": "2026-09-20T13:30:58.773228+00:00",
+      "type": "click",
+      "ref": "e0",
+      "note": "opened member search instead of posting the transfer"
+    }
+  ],
+  "resolution": "operator declined the irreversible post; resume on search",
+  "llm_calls": 0,
+  "same_playwright_page": true
+}

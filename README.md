@@ -81,11 +81,25 @@ cuas replay \
 
 Expected: `kind=business_outcome`, `business_code=MEMBER_NOT_FOUND`.
 
-Agent-facing catalog (stretch):
+Same capability on a second tenant (First Credit Union's branded Heritage Core — labels `Find Member` / `Find` / `Open Record`) using locator overrides, not a new recording:
+
+```bash
+# Terminal 1
+cuas target --brand first_cu --port 8786
+
+# Terminal 2
+cuas replay \
+  --artifact artifacts/heritage_core.lookup_savings_balance.first_cu.json \
+  --param member_id=12345
+```
+
+Agent-facing catalog (stretch). `POST /capabilities/{id}/invoke` actually replays with no LLM (Heritage Core must be running):
 
 ```bash
 cuas catalog --artifacts artifacts
-# GET http://127.0.0.1:8789/capabilities
+# GET  http://127.0.0.1:8789/capabilities
+# POST http://127.0.0.1:8789/capabilities/heritage_core.lookup_savings_balance/invoke
+#      {"params": {"member_id": "12345"}}
 ```
 
 ## Tests
@@ -96,7 +110,13 @@ pytest -q
 
 The e2e tests boot Heritage Core, run discovery against the live UI, replay the compiled artifact, replay a missing member ID, and exercise live-session handoff on the same Playwright page.
 
-Checked-in `evidence/` is a **genuine TAMUS AI Chat discovery** (`protected.gemini-2.5-flash-lite`, 8 LLM calls) plus deterministic replays with 0 LLM calls. Recapture:
+Checked-in `evidence/` is a **genuine TAMUS AI Chat discovery** (`protected.gemini-2.5-flash-lite`, 8 LLM calls) plus deterministic replays with 0 LLM calls (success, not-found, cross-tenant overrides, and a live irreversible-action handoff). Recapture replays without wiping discovery:
+
+```bash
+python scripts/capture_evidence.py
+```
+
+To recapture discovery from TAMUS as well:
 
 ```bash
 CUAS_LLM=openai python scripts/capture_evidence.py

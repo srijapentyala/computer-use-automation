@@ -38,21 +38,25 @@ After every step replay re-reads the page and classifies:
 | **Recoverable** | Nightly batch overlay | Dismiss, continue |
 | **Hard failure** | Locator miss, checkpoint miss, policy deny | `kind=failure` with step id, expected, observed, locators tried, screenshot |
 
-UI drift is secondary here — these apps change slowly — but ranked locators are the hedge. If role+name breaks because a tenant relabelled a button, adjacent text or (last) CSS may still hit; if nothing hits and no known outcome matches, we stop with evidence rather than guessing.
+Replay also honors per-step waits (after “Go”, text containing “matching”; after opening the record, “Member Record”) and a UI checkpoint that the member record heading is present — not only that an output dict is non-empty. Ranked locators are the hedge for slow UI drift: if role+name breaks because a tenant relabelled a button, adjacent text or (last) CSS may still hit; if nothing hits and no known outcome matches, we stop with evidence rather than guessing.
 
 ## 4. Heterogeneity & multi-tenant
 
 **Surfaces.** Perception/actuation live behind `SurfaceAdapter`. The artifact does not say “Playwright CSS.” A desktop adapter would resolve `role_name` / `adjacent_text` against AXUIElement / UI Automation the same way the web adapter resolves them against frames. Screenshot+XY would be a locator strategy of last resort, not the default, because it dies on DPI and layout.
 
-**Tenants.** Hundreds of institutions run the same vendor product, branded and versioned differently. The artifact binds to `vendor` + `app_id` with `tenant.scope=vendor_default`. A tenant that moved a button records **overrides** (replace locator list for `s4_click`, rewrite a path prefix) rather than a new flow. Detection of drift is a replay failure plus a fingerprint of the observation; the recovery I would build next is a bounded, policy-checked single-step LLM heal that proposes an override, never a silent rewrite of the approved artifact.
+**Tenants.** Hundreds of institutions run the same vendor product, branded and versioned differently. The artifact binds to `vendor` + `app_id` with `tenant.scope=vendor_default`. A tenant that moved a button records **overrides** (replace the accessible name for `s4_click`, rewrite the entry URL) rather than a new flow.
 
-I did not build a tenant registry or a desktop driver. The types are there so adding either does not require a new schema.
+I demonstrated this with a second branded instance of Heritage Core (`first_cu`): nav is “Find Member”, submit is “Find”, open is “Open Record”. Replaying the vendor-default locators against that chrome fails; applying `locator_names` on the same step ids succeeds and still returns `$2,450.00` with 0 LLM calls. Evidence: `evidence/replay_tenant/`. Detection of remaining drift is a replay failure plus a fingerprint of the observation; the recovery I would build next is a bounded, policy-checked single-step LLM heal that proposes an override, never a silent rewrite of the approved artifact.
+
+I did not build a tenant registry or a desktop driver. The types plus one variant are there so adding either does not require a new schema.
 
 ## 5. Escalation & handoff
 
 Stuck is: repeated observation fingerprint, max steps, LLM/act exception, or policy blocking an irreversible action.
 
-The **live session** is a control-transfer object around a single surface (the same Playwright page). `owner` is `automation | human | none`. Requesting an intervention flips owner to human, clears a resume event, and persists an `InterventionRequest` (goal, step, observation summary, screenshot). Automation awaits that event before the next step — it does not open a new browser.
+The **live session** is a control-transfer object around a single surface (the same Playwright page). `owner` is `automation | human | none`. Requesting an intervention flips owner to human, clears a resume event, and persists an `InterventionRequest` (goal, step, observation summary, screenshot). Automation **awaits that event** before the next step — it does not open a new browser. After hand-back, an irreversible step is skipped rather than clicked.
+
+Checked-in `evidence/handoff/` is a live capture: automation opens Funds Transfer, policy blocks **Submit Transfer**, an operator uses the same page to open Member Search instead, then hands control back. The transfer is never posted.
 
 The operator console is intentionally thin: take control, act through the same adapter (click/type/dismiss by ref), record what the human did, hand back. A headed window is also valid; the human is still on the same session. A real co-browsing product (CDP screencast, cursor sync, audit video) is the next layer on this seam, not a substitute for it.
 
@@ -71,8 +75,8 @@ Limits: allowlists are static; there is no runtime DLP model. A determined model
 
 Left out on purpose: real co-browsing UI, desktop driver, tenant registry, queues, multi-run flakiness dashboards, open-ended LLM healing, generated Playwright tests.
 
-What I would build next: (1) bounded one-step heal that writes a *proposed* tenant override, (2) approval + stability score before unattended replay, (3) a second branded variant of Heritage Core to prove vendor_default + override reuse.
+What I would build next: (1) bounded one-step heal that writes a *proposed* tenant override, (2) approval + stability score before unattended replay, (3) more than one branded variant so override packs can be reviewed like config, not code.
 
-What I kept thin but real: the operator console (ugly, but the control-transfer model is complete), the catalog HTTP surface (lists contracts and accepts invoke payloads; the CLI/library owns the browser).
+What I kept thin but real: the operator console (ugly, but the control-transfer model waits, resumes, and is evidenced on a live page), the catalog HTTP surface (lists contracts and `POST /invoke` actually replays with no LLM).
 
 LLM provider is a seam (`openai` / `anthropic` / `ollama` / `scripted`). Checked-in discovery evidence is a live TAMUS AI Chat (`gemini-2.5-flash-lite`) run through that seam; replay evidence is the unattended production path and does not use a model.

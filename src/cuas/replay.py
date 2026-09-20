@@ -23,6 +23,7 @@ from cuas.safety.guardrails import Guardrails, PolicyViolation
 from cuas.safety.redact import redact_text
 from cuas.surface.locators import LocatorError
 from cuas.surface.web import WebSurface
+from cuas.tenant import apply_overrides
 
 
 class ReplayEngine:
@@ -43,10 +44,12 @@ class ReplayEngine:
         self.allow_irreversible = allow_irreversible
 
     async def run(self, capability: Capability, params: dict[str, str]) -> RunResult:
+        capability = apply_overrides(capability)
         self._validate_params(capability, params)
         self.evidence.write(
             "replay_start",
             capability_id=capability.id,
+            tenant=capability.tenant.tenant_id,
             params={k: redact_text(v) for k, v in params.items()},
         )
         self.guard.check_url(capability.app.entry_url)
@@ -54,9 +57,10 @@ class ReplayEngine:
 
         outputs: dict[str, str] = {}
         executed = 0
+        handoff_timeout = max(1.0, self.policy.idle_timeout_ms / 1000)
 
         for step in capability.steps:
-            await self.session.wait_if_human_in_control()
+            await self.session.wait_if_human_in_control(timeout=handoff_timeout)
             if self.session.owner.value == "none":
                 return self._fail(capability, step, "session aborted", "operator aborted")
 
@@ -72,7 +76,7 @@ class ReplayEngine:
                         capability_id=capability.id,
                         business_code=code,
                         business_message=self._message_for(capability, code),
-                        evidence_dir=str(self.evidence.dir),
+                        evidence_dir=self.evidence.relative_dir(),
                         steps_executed=executed,
                         llm_calls=0,
                     )
@@ -80,18 +84,26 @@ class ReplayEngine:
                     await self._dismiss_overlay()
                     continue
                 if recover == "escalate":
-                    return await self._escalate(capability, step, code, obs.visible_text)
+                    status = await self._handoff(capability, step, code, obs.visible_text)
+                    if status != "resumed":
+                        return self._escalated(capability, step, code)
+                    continue
 
             try:
                 value = self._value_for(step, params)
                 self._check_step_policy(step, obs.url)
                 await self._execute(step, value)
+                await self._honor_wait(step)
                 executed += 1
                 self.evidence.write("step_ok", step_id=step.id, action=step.action.value)
             except PolicyViolation as exc:
                 shot = await self._shot("policy")
                 if exc.code == "IRREVERSIBLE_BLOCKED":
-                    return await self._escalate(capability, step, str(exc), obs.visible_text)
+                    status = await self._handoff(capability, step, str(exc), obs.visible_text)
+                    if status != "resumed":
+                        return self._escalated(capability, step, str(exc))
+                    self.evidence.write("handoff_skipped_step", step_id=step.id)
+                    continue
                 return self._fail(capability, step, "policy denied this action", str(exc), shot)
             except LocatorError as exc:
                 # Re-check outcomes: a missing control often means an error page.
@@ -103,7 +115,7 @@ class ReplayEngine:
                         capability_id=capability.id,
                         business_code=outcome[1],
                         business_message=self._message_for(capability, outcome[1]),
-                        evidence_dir=str(self.evidence.dir),
+                        evidence_dir=self.evidence.relative_dir(),
                         steps_executed=executed,
                         llm_calls=0,
                     )
@@ -136,7 +148,7 @@ class ReplayEngine:
                 capability_id=capability.id,
                 business_code=outcome[1],
                 business_message=self._message_for(capability, outcome[1]),
-                evidence_dir=str(self.evidence.dir),
+                evidence_dir=self.evidence.relative_dir(),
                 steps_executed=executed,
                 llm_calls=0,
                 outputs=outputs,
@@ -150,7 +162,7 @@ class ReplayEngine:
                 kind=OutcomeKind.FAILURE,
                 capability_id=capability.id,
                 error=checkpoint_error,
-                evidence_dir=str(self.evidence.dir),
+                evidence_dir=self.evidence.relative_dir(),
                 steps_executed=executed,
                 llm_calls=0,
                 outputs=outputs,
@@ -160,7 +172,7 @@ class ReplayEngine:
             kind=OutcomeKind.SUCCESS,
             capability_id=capability.id,
             outputs=outputs,
-            evidence_dir=str(self.evidence.dir),
+            evidence_dir=self.evidence.relative_dir(),
             steps_executed=executed,
             llm_calls=0,
         )
@@ -202,6 +214,13 @@ class ReplayEngine:
             url=step.navigate_url,
             key=step.key,
         )
+
+    async def _honor_wait(self, step: Step) -> None:
+        w = step.wait
+        if w.until == "text" and w.text:
+            await self.surface.wait_for_text(w.text, timeout_ms=w.timeout_ms)
+        elif w.until == "url_contains" and w.url_contains:
+            await self.surface.wait_for_url(w.url_contains, timeout_ms=w.timeout_ms)
 
     def _detect_outcome(self, cap: Capability, text: str) -> tuple[str, str, str] | None:
         blob = text or ""
@@ -279,7 +298,7 @@ class ReplayEngine:
                 continue
         return None
 
-    async def _escalate(self, cap: Capability, step: Step, reason: str, observed: str) -> RunResult:
+    async def _handoff(self, cap: Capability, step: Step, reason: str, observed: str) -> str:
         shot = await self._shot("escalate")
         req = self.session.request_intervention(
             reason,
@@ -288,12 +307,21 @@ class ReplayEngine:
             observation_summary=redact_text(observed[:1500]),
             screenshot_path=str(shot) if shot else None,
         )
+        self.evidence.write("escalated", reason=reason, intervention_id=req.id)
+        timeout = max(1.0, self.policy.idle_timeout_ms / 1000)
+        await self.session.wait_if_human_in_control(timeout=timeout)
+        if self.session.in_automation:
+            self.evidence.write("handoff_resumed", intervention_id=req.id)
+            return "resumed"
+        return "aborted"
+
+    def _escalated(self, cap: Capability, step: Step, reason: str) -> RunResult:
         return RunResult(
             kind=OutcomeKind.ESCALATED,
             capability_id=cap.id,
-            intervention_id=req.id,
+            intervention_id=self.session.intervention.id if self.session.intervention else None,
             error=StepError(step_id=step.id, expected="automation can proceed", observed=reason),
-            evidence_dir=str(self.evidence.dir),
+            evidence_dir=self.evidence.relative_dir(),
             llm_calls=0,
         )
 
@@ -322,7 +350,7 @@ class ReplayEngine:
                 observed=observed,
                 locators_tried=locators or [],
             ),
-            evidence_dir=str(self.evidence.dir),
+            evidence_dir=self.evidence.relative_dir(),
             llm_calls=0,
         )
 

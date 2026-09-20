@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
@@ -27,22 +28,36 @@ class Catalog:
 
     def get(self, cap_id: str) -> Capability:
         path = self._path(cap_id)
-        if not path.exists():
-            raise FileNotFoundError(cap_id)
-        return Capability.model_validate_json(path.read_text())
+        if path.exists():
+            return Capability.model_validate_json(path.read_text())
+        for candidate in sorted(self.root.glob("*.json")):
+            try:
+                cap = Capability.model_validate_json(candidate.read_text())
+            except Exception:  # noqa: BLE001
+                continue
+            if cap.id == cap_id:
+                return cap
+        raise FileNotFoundError(cap_id)
 
     def list(self) -> list[Capability]:
         caps = []
+        seen = set()
         for path in sorted(self.root.glob("*.json")):
             try:
-                caps.append(Capability.model_validate_json(path.read_text()))
+                cap = Capability.model_validate_json(path.read_text())
             except Exception:  # noqa: BLE001
                 continue
+            key = (cap.id, cap.tenant.tenant_id)
+            if key in seen:
+                continue
+            seen.add(key)
+            caps.append(cap)
         return caps
 
 
 class InvokeRequest(BaseModel):
     params: dict[str, str] = Field(default_factory=dict)
+    tenant_id: str | None = None
 
 
 def create_catalog_app(catalog: Catalog) -> FastAPI:
@@ -61,6 +76,7 @@ def create_catalog_app(catalog: Catalog) -> FastAPI:
                 "outputs": [o.model_dump() for o in c.outputs],
                 "risk": c.risk,
                 "status": c.status,
+                "tenant": c.tenant.model_dump(),
             }
             for c in catalog.list()
         ]
@@ -74,17 +90,32 @@ def create_catalog_app(catalog: Catalog) -> FastAPI:
 
     @app.post("/capabilities/{cap_id}/invoke")
     async def invoke(cap_id: str, body: InvokeRequest):
-        # The HTTP catalog is the contract. Actual replay is triggered by the
-        # CLI / library so this process does not have to own a browser.
         try:
             cap = catalog.get(cap_id)
         except FileNotFoundError:
             raise HTTPException(404, "unknown capability") from None
-        return {
-            "accepted": True,
-            "capability_id": cap.id,
-            "params": body.params,
-            "hint": "Run `cuas replay --artifact ... --param k=v` (or cuas.replay.ReplayEngine) to execute without an LLM.",
-        }
+        if body.tenant_id:
+            for candidate in catalog.list():
+                if candidate.id == cap_id and candidate.tenant.tenant_id == body.tenant_id:
+                    cap = candidate
+                    break
+        os.environ.setdefault("COREBANK_USER", "teller")
+        os.environ.setdefault("COREBANK_PASSWORD", "teller")
+        from cuas.config import Policy
+        from cuas.evidence import EvidenceLog
+        from cuas.replay import ReplayEngine
+        from cuas.surface.web import WebSurface
+
+        policy = Policy.load(Path(__file__).resolve().parents[2] / "policies" / "default.yaml")
+        surface, browser, context = await WebSurface.launch(headless=True)
+        try:
+            engine = ReplayEngine(
+                surface, policy, evidence=EvidenceLog(Path("runs"), f"catalog-{cap_id}")
+            )
+            result = await engine.run(cap, body.params)
+            return json.loads(result.model_dump_json())
+        finally:
+            await context.close()
+            await browser.close()
 
     return app

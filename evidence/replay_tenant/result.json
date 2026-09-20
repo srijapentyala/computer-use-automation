@@ -1,0 +1,15 @@
+{
+  "kind": "success",
+  "capability_id": "heritage_core.lookup_savings_balance",
+  "goal": null,
+  "outputs": {
+    "current_savings_balance": "$2,450.00"
+  },
+  "business_code": null,
+  "business_message": null,
+  "error": null,
+  "intervention_id": null,
+  "evidence_dir": "evidence/replay_tenant",
+  "steps_executed": 7,
+  "llm_calls": 0
+}

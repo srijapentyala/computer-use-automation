@@ -34,6 +34,12 @@ class EvidenceLog:
         safe = redact_text(label).replace(" ", "_")[:40]
         return self.dir / f"{self._n:03d}_{safe}.png"
 
+    def relative_dir(self) -> str:
+        try:
+            return str(self.dir.resolve().relative_to(Path.cwd().resolve()))
+        except ValueError:
+            return str(self.dir)
+
     def dump_text(self, name: str, content: str) -> Path:
         path = self.dir / name
         path.write_text(redact_text(content), encoding="utf-8")
