@@ -94,16 +94,12 @@ cuas catalog --artifacts artifacts
 pytest -q
 ```
 
-The e2e tests boot Heritage Core, run scripted discovery against the live UI, replay the compiled artifact, replay a missing member ID, and exercise live-session handoff on the same Playwright page.
+The e2e tests boot Heritage Core, run discovery against the live UI, replay the compiled artifact, replay a missing member ID, and exercise live-session handoff on the same Playwright page.
 
-Checked-in `evidence/` is a live-UI discovery (scripted adapter) plus deterministic replays. To recapture:
+Checked-in `evidence/` is a **genuine TAMUS AI Chat discovery** (`protected.gemini-2.5-flash-lite`, 8 LLM calls) plus deterministic replays with 0 LLM calls. Recapture:
 
 ```bash
-# no paid key
-python scripts/capture_evidence.py
-
-# local model (brew install ollama && ollama pull llama3.2:3b && ollama serve)
-CUAS_LLM=ollama python scripts/capture_evidence.py
+CUAS_LLM=openai python scripts/capture_evidence.py
 ```
 
 ## Layout
