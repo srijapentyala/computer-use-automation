@@ -24,7 +24,7 @@ cp .env.example .env   # then add OPENAI_API_KEY (or ANTHROPIC_API_KEY)
 
 Replay, tests, and the operator handoff **do not need a model key**. Discovery against a live LLM does.
 
-Without a key, `--llm scripted` still drives the real UI via a grounded heuristic so you can inspect the loop, artifact, and replay. That adapter is not a model; a genuine discovery run uses `--llm openai` or `--llm anthropic`.
+Without a paid key, `--llm scripted` still drives the **live** UI through the same observe→decide→act loop, compiler, and replay path. You can also point discovery at a local Ollama model (`--llm ollama`, default `llama3.2:3b`) or any OpenAI-compatible server. A hosted model (`--llm openai` / `--llm anthropic`) is optional.
 
 ## Demo path
 
@@ -92,13 +92,15 @@ pytest -q
 
 The e2e tests boot Heritage Core, run scripted discovery against the live UI, replay the compiled artifact, replay a missing member ID, and exercise live-session handoff on the same Playwright page.
 
-**Before you email the repo:** the brief requires at least one genuine LLM-driven discovery. Set `OPENAI_API_KEY` (or `ANTHROPIC_API_KEY`) and run:
+Checked-in `evidence/` is a live-UI discovery (scripted adapter) plus deterministic replays. To recapture:
 
 ```bash
+# no paid key
 python scripts/capture_evidence.py
-```
 
-That overwrites `evidence/discovery/` and records the provider in `evidence/discovery/llm.txt`. Replay evidence does not need a key.
+# local model (brew install ollama && ollama pull llama3.2:3b && ollama serve)
+CUAS_LLM=ollama python scripts/capture_evidence.py
+```
 
 ## Layout
 

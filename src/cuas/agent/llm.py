@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 from dataclasses import dataclass, field
 from typing import Any, Protocol
 
@@ -26,9 +27,13 @@ class Decision:
 
 
 def parse_decision(payload: str | dict[str, Any]) -> Decision:
-    data = json.loads(payload) if isinstance(payload, str) else payload
+    if isinstance(payload, dict):
+        data = payload
+    else:
+        data = json.loads(_extract_json(payload))
     if "action" not in data and "type" in data:
         data["action"] = data["type"]
+    data["action"] = _normalize_action(str(data.get("action") or "escalate"))
     return Decision(
         thought=str(data.get("thought") or ""),
         action=str(data.get("action") or "escalate"),
@@ -42,6 +47,42 @@ def parse_decision(payload: str | dict[str, Any]) -> Decision:
         reason=data.get("reason"),
         raw=data,
     )
+
+
+_VALID_ACTIONS = {
+    "click",
+    "type",
+    "select",
+    "press",
+    "extract",
+    "dismiss",
+    "done",
+    "escalate",
+    "wait",
+    "navigate",
+    "screenshot",
+}
+
+
+def _normalize_action(action: str) -> str:
+    raw = (action or "").strip().lower()
+    if raw in _VALID_ACTIONS:
+        return raw
+    for name in _VALID_ACTIONS:
+        if raw.startswith(name):
+            return name
+    return "escalate"
+
+
+def _extract_json(text: str) -> str:
+    text = (text or "").strip()
+    if text.startswith("```"):
+        text = re.sub(r"^```(?:json)?\s*", "", text)
+        text = re.sub(r"\s*```$", "", text)
+    start, end = text.find("{"), text.rfind("}")
+    if start >= 0 and end > start:
+        return text[start : end + 1]
+    return text
 
 
 class LLM(Protocol):
@@ -64,20 +105,36 @@ class OpenAILLM:
 
     async def decide(self, goal: str, observation: Observation, history: list[str]) -> Decision:
         self.calls += 1
-        response = await self.client.chat.completions.create(
-            model=self.model,
-            temperature=0,
-            response_format={"type": "json_object"},
-            messages=[
+        kwargs: dict[str, Any] = {
+            "model": self.model,
+            "temperature": 0,
+            "messages": [
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {
                     "role": "user",
                     "content": user_prompt(goal, observation.summary(), history),
                 },
             ],
-        )
-        content = response.choices[0].message.content or "{}"
-        return parse_decision(content)
+        }
+        # Some local OpenAI-compatible servers do not implement json_object.
+        if not self._local:
+            kwargs["response_format"] = {"type": "json_object"}
+        last_error: Exception | None = None
+        for _ in range(2):
+            try:
+                response = await self.client.chat.completions.create(**kwargs)
+                content = response.choices[0].message.content or "{}"
+                return parse_decision(content)
+            except Exception as exc:  # noqa: BLE001
+                last_error = exc
+                continue
+        raise last_error or RuntimeError("LLM decide failed")
+
+    @property
+    def _local(self) -> bool:
+        base = getattr(self.client, "base_url", None)
+        host = str(base) if base is not None else ""
+        return "127.0.0.1" in host or "localhost" in host
 
 
 class AnthropicLLM:
@@ -298,8 +355,16 @@ def _balance_for_product(text: str, product: str) -> str | None:
 
 def build_llm(kind: str, settings: Settings | None = None) -> LLM:
     kind = kind.lower()
+    settings = settings or Settings()
     if kind in {"scripted", "heuristic", "offline"}:
         return ScriptedLLM()
     if kind == "anthropic":
         return AnthropicLLM(settings)
+    if kind == "ollama":
+        local = settings.model_copy(update={
+            "openai_base_url": "http://127.0.0.1:11434/v1",
+            "openai_api_key": "ollama",
+            "openai_model": os.getenv("OLLAMA_MODEL") or settings.ollama_model,
+        })
+        return OpenAILLM(local)
     return OpenAILLM(settings)

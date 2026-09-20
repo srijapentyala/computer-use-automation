@@ -76,7 +76,7 @@ def target(
 def discover(
     goal: str = typer.Option(..., "--goal", help="Natural-language goal"),
     url: str = typer.Option("http://127.0.0.1:8787/", help="Entry URL of the target app"),
-    llm: str = typer.Option("openai", help="openai | anthropic | scripted"),
+    llm: str = typer.Option("scripted", help="scripted | ollama | openai | anthropic"),
     headed: bool = typer.Option(False, help="Show the browser window"),
     out: Path = typer.Option(Path("artifacts"), help="Directory for the compiled capability"),
     evidence_dir: Path = typer.Option(Path("runs"), help="Evidence root"),

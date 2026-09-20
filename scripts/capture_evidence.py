@@ -13,6 +13,8 @@ from pathlib import Path
 import httpx
 import uvicorn
 
+from dotenv import load_dotenv
+
 from corebank.app import create_app
 from cuas.agent.llm import build_llm
 from cuas.agent.loop import DiscoveryRunner
@@ -28,6 +30,11 @@ EVIDENCE = ROOT / "evidence"
 ART = ROOT / "artifacts"
 POLICY = Policy.load(ROOT / "policies" / "default.yaml")
 GOAL = "look up member 12345 and read their current savings balance"
+
+
+def _choose_llm(settings: Settings) -> str:
+    # Explicit only. A leftover/unpaid cloud key must not wipe good evidence.
+    return os.getenv("CUAS_LLM") or "scripted"
 
 
 def start_core(port: int = 8787) -> str:
@@ -47,13 +54,12 @@ def start_core(port: int = 8787) -> str:
 
 
 async def main() -> None:
+    load_dotenv(ROOT / ".env")
     os.environ.setdefault("COREBANK_USER", "teller")
     os.environ.setdefault("COREBANK_PASSWORD", "teller")
     url = start_core(8787)
     settings = Settings()
-    llm_kind = "openai" if settings.openai_api_key else "scripted"
-    if settings.anthropic_api_key and not settings.openai_api_key:
-        llm_kind = "anthropic"
+    llm_kind = _choose_llm(settings)
     print(f"discovery llm={llm_kind}")
 
     EVIDENCE.mkdir(exist_ok=True)
@@ -80,7 +86,7 @@ async def main() -> None:
         evidence.dump_text("result.json", result.model_dump_json(indent=2))
         evidence.dump_text(
             "llm.txt",
-            f"provider={llm_kind} calls={result.llm_calls}\n",
+            f"provider={llm_kind} model={getattr(runner.llm, 'model', llm_kind)} calls={result.llm_calls}\n",
         )
     finally:
         await context.close()

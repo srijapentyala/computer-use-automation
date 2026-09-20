@@ -16,6 +16,12 @@ Rules:
   irreversible; escalate instead.
 - Do not include passwords, SSNs, or full account numbers in "thought".
 - When the goal is met, call done and fill outputs with the extracted values.
+- Demo teller credentials are operator id teller / password teller. Type both
+  before clicking Sign On. `action` must be exactly one of the enum words below.
+
+Example — empty sign-on form with [e0] textbox adjacent="Operator ID:" [e1] textbox
+adjacent="Password:" [e2] button name="Sign On":
+{"thought":"Fill operator id","action":"type","ref":"e0","value":"teller","parameter":null,"key":null,"extract_as":null,"business_code":null,"outputs":{},"reason":null}
 
 Respond with a single JSON object of this shape:
 {

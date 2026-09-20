@@ -11,11 +11,14 @@ Checked-in runs against the local Heritage Core teller console.
 
 The replay evidence is the production path and does not use a model.
 
-Discovery in this folder was captured with `--llm scripted` (grounded heuristic on the live UI) because no model API key was present in the capture environment. The agent loop, surface, compiler, and artifact are the same as the OpenAI/Anthropic path. To replace discovery with a genuine LLM run before you email the repo:
+Discovery in this folder is a **live browser run** of the same observe→decide→act loop used by OpenAI/Anthropic/Ollama. The decide step used the grounded `scripted` adapter (no paid API). Replay folders are the production path: **0 LLM calls**.
+
+To recapture with a local model instead:
 
 ```bash
-cp .env.example .env   # set OPENAI_API_KEY
-python scripts/capture_evidence.py
+brew install ollama && ollama serve &
+ollama pull llama3.2:3b
+CUAS_LLM=ollama python scripts/capture_evidence.py
 ```
 
 `evidence/discovery/llm.txt` records which provider produced that capture.
