@@ -1,0 +1,87 @@
+body, table, td, input, select, button, a {
+  font-family: Tahoma, Verdana, Arial, sans-serif;
+  font-size: 12px;
+}
+html, body {
+  margin: 0;
+  padding: 0;
+  background: #d4d0c8;
+  color: #000;
+}
+.banner {
+  background: #003366;
+  color: #ffcc33;
+  font-weight: bold;
+  padding: 6px 10px;
+  font-size: 14px;
+  letter-spacing: 0.4px;
+}
+.subbanner {
+  background: #6688aa;
+  color: #fff;
+  padding: 3px 10px;
+  font-size: 11px;
+}
+.page {
+  padding: 10px;
+}
+.tbl {
+  border-collapse: collapse;
+  background: #fff;
+  border: 1px solid #808080;
+}
+.tbl td, .tbl th {
+  border: 1px solid #808080;
+  padding: 4px 8px;
+}
+.tbl th {
+  background: #003366;
+  color: #fff;
+  text-align: left;
+}
+.hdr {
+  background: #c0c0c0;
+  font-weight: bold;
+}
+.err {
+  color: #cc0000;
+  font-weight: bold;
+  padding: 6px 0;
+}
+.ok {
+  color: #006600;
+  font-weight: bold;
+}
+input[type=text], input[type=password], select {
+  border: 1px solid #000;
+  background: #fff;
+  padding: 2px 4px;
+}
+.btn {
+  background: #d4d0c8;
+  border: 2px outset #fff;
+  padding: 2px 10px;
+  cursor: pointer;
+}
+a { color: #0000cc; }
+.navbody {
+  background: #003366;
+  color: #fff;
+  padding: 8px;
+}
+.navbody a {
+  display: block;
+  color: #ffcc33;
+  text-decoration: none;
+  padding: 4px 0;
+}
+.overlay {
+  position: absolute;
+  top: 40px;
+  left: 40px;
+  right: 40px;
+  background: #ffffcc;
+  border: 3px solid #003366;
+  padding: 16px;
+}
+.closed { color: #cc0000; }

@@ -1,0 +1,9 @@
+{"ts": "2026-09-20T03:42:01.943213+00:00", "n": 1, "event": "replay_start", "capability_id": "heritage_core.lookup_savings_balance", "params": {"member_id": "12345"}}
+{"ts": "2026-09-20T03:42:02.276691+00:00", "n": 2, "event": "step_ok", "step_id": "s1_type", "action": "type"}
+{"ts": "2026-09-20T03:42:02.516742+00:00", "n": 3, "event": "step_ok", "step_id": "s2_type", "action": "type"}
+{"ts": "2026-09-20T03:42:03.191015+00:00", "n": 4, "event": "step_ok", "step_id": "s3_click", "action": "click"}
+{"ts": "2026-09-20T03:42:03.888192+00:00", "n": 5, "event": "step_ok", "step_id": "s4_click", "action": "click"}
+{"ts": "2026-09-20T03:42:04.164450+00:00", "n": 6, "event": "step_ok", "step_id": "s5_type", "action": "type"}
+{"ts": "2026-09-20T03:42:04.815147+00:00", "n": 7, "event": "step_ok", "step_id": "s6_click", "action": "click"}
+{"ts": "2026-09-20T03:42:05.481304+00:00", "n": 8, "event": "step_ok", "step_id": "s7_click", "action": "click"}
+{"ts": "2026-09-20T03:42:05.536267+00:00", "n": 9, "event": "replay_done", "result": {"kind": "success", "capability_id": "heritage_core.lookup_savings_balance", "goal": null, "outputs": {"savings_balance": "$2,450.00", "member_name": "Jane A. Doe"}, "business_code": null, "business_message": null, "error": null, "intervention_id": null, "evidence_dir": "/Users/srijapentyala/Interface.io/evidence/replay_success", "steps_executed": 7, "llm_calls": 0}}

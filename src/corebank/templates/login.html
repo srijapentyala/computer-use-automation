@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Heritage Core Login</title>
+  <link rel="stylesheet" href="/static/legacy.css">
+</head>
+<body>
+  <div class="banner">HERITAGE CORE  ·  Teller Workstation  ·  v4.12</div>
+  <div class="subbanner">Authorized personnel only — all activity is logged</div>
+  <div class="page">
+    <p>Sign on to the member servicing console.</p>
+    {% if error %}<div class="err">{{ error }}</div>{% endif %}
+    <form method="post" action="/login">
+      <table class="tbl">
+        <tr class="hdr"><td colspan="2">Sign On</td></tr>
+        <tr>
+          <td>Operator ID:</td>
+          <td><input type="text" name="f1" value="" autocomplete="off"></td>
+        </tr>
+        <tr>
+          <td>Password:</td>
+          <td><input type="password" name="f2" value=""></td>
+        </tr>
+        <tr>
+          <td colspan="2" style="text-align:right">
+            <input class="btn" type="submit" value="Sign On">
+          </td>
+        </tr>
+      </table>
+    </form>
+    <p style="font-size:10px;color:#555">Demo operators use Operator ID <b>teller</b> / Password <b>teller</b>.</p>
+  </div>
+</body>
+</html>

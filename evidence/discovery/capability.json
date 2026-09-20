@@ -1,0 +1,447 @@
+{
+  "schema_version": "1.0.0",
+  "id": "heritage_core.lookup_savings_balance",
+  "name": "Look up member savings balance",
+  "description": "Recorded flow for: look up member 12345 and read their current savings balance. Replay substitutes parameters, uses ranked locators (no LLM), and maps known UI texts to business outcomes.",
+  "version": 1,
+  "status": "approved",
+  "goal_template": "look up member {member_id} and read their current savings balance",
+  "app": {
+    "vendor": "heritage",
+    "app_id": "heritage_core",
+    "surface": "web",
+    "entry_url": "http://127.0.0.1:8787/",
+    "profile": "heritage_core"
+  },
+  "tenant": {
+    "scope": "vendor_default",
+    "tenant_id": null,
+    "overrides": {}
+  },
+  "parameters": [
+    {
+      "name": "member_id",
+      "type": "string",
+      "required": true,
+      "description": "Input captured during discovery (Fill member ID from the goal.)",
+      "pattern": "^[0-9]{4,8}$",
+      "enum": null,
+      "example": "12345",
+      "sensitive": false
+    }
+  ],
+  "outputs": [
+    {
+      "name": "savings_balance",
+      "type": "money",
+      "description": "Extracted during discovery (example redacted in logs).",
+      "sensitive": false
+    },
+    {
+      "name": "member_name",
+      "type": "string",
+      "description": "Extracted during discovery (example redacted in logs).",
+      "sensitive": false
+    }
+  ],
+  "risk": "reversible",
+  "steps": [
+    {
+      "id": "s1_type",
+      "action": "type",
+      "description": "Sign in as teller.",
+      "target": {
+        "locators": [
+          {
+            "strategy": "adjacent_text",
+            "role": "textbox",
+            "name": null,
+            "text": "Operator ID",
+            "placeholder": null,
+            "css": null,
+            "nth": 0,
+            "confidence": 0.82,
+            "why": "Legacy table forms label controls in the previous cell, not via <label>."
+          },
+          {
+            "strategy": "css",
+            "role": null,
+            "name": null,
+            "text": null,
+            "placeholder": null,
+            "css": "input[name=\"f1\"]",
+            "nth": 0,
+            "confidence": 0.25,
+            "why": "Last-resort CSS; expected to break across tenants and versions."
+          }
+        ],
+        "frame": null
+      },
+      "input": {
+        "from_parameter": null,
+        "literal": null,
+        "secret_env": "COREBANK_USER"
+      },
+      "extract_as": null,
+      "navigate_url": null,
+      "key": null,
+      "wait": {
+        "until": "visible",
+        "text": null,
+        "url_contains": null,
+        "timeout_ms": 8000
+      },
+      "risk": "reversible",
+      "notes": ""
+    },
+    {
+      "id": "s2_type",
+      "action": "type",
+      "description": "Enter operator password.",
+      "target": {
+        "locators": [
+          {
+            "strategy": "adjacent_text",
+            "role": "textbox",
+            "name": null,
+            "text": "Password",
+            "placeholder": null,
+            "css": null,
+            "nth": 0,
+            "confidence": 0.82,
+            "why": "Legacy table forms label controls in the previous cell, not via <label>."
+          },
+          {
+            "strategy": "css",
+            "role": null,
+            "name": null,
+            "text": null,
+            "placeholder": null,
+            "css": "input[name=\"f2\"]",
+            "nth": 0,
+            "confidence": 0.25,
+            "why": "Last-resort CSS; expected to break across tenants and versions."
+          }
+        ],
+        "frame": null
+      },
+      "input": {
+        "from_parameter": null,
+        "literal": null,
+        "secret_env": "COREBANK_PASSWORD"
+      },
+      "extract_as": null,
+      "navigate_url": null,
+      "key": null,
+      "wait": {
+        "until": "visible",
+        "text": null,
+        "url_contains": null,
+        "timeout_ms": 8000
+      },
+      "risk": "reversible",
+      "notes": ""
+    },
+    {
+      "id": "s3_click",
+      "action": "click",
+      "description": "Submit sign-on.",
+      "target": {
+        "locators": [
+          {
+            "strategy": "role_name",
+            "role": "button",
+            "name": "Sign On",
+            "text": null,
+            "placeholder": null,
+            "css": null,
+            "nth": 0,
+            "confidence": 0.9,
+            "why": "Accessible name is stable across branded tenants of the same vendor app."
+          },
+          {
+            "strategy": "css",
+            "role": null,
+            "name": null,
+            "text": null,
+            "placeholder": null,
+            "css": "input:nth-of-type(1)",
+            "nth": 0,
+            "confidence": 0.25,
+            "why": "Last-resort CSS; expected to break across tenants and versions."
+          }
+        ],
+        "frame": null
+      },
+      "input": null,
+      "extract_as": null,
+      "navigate_url": null,
+      "key": null,
+      "wait": {
+        "until": "visible",
+        "text": null,
+        "url_contains": null,
+        "timeout_ms": 8000
+      },
+      "risk": "reversible",
+      "notes": ""
+    },
+    {
+      "id": "s4_click",
+      "action": "click",
+      "description": "Go to member search.",
+      "target": {
+        "locators": [
+          {
+            "strategy": "role_name",
+            "role": "link",
+            "name": "Member Search",
+            "text": null,
+            "placeholder": null,
+            "css": null,
+            "nth": 0,
+            "confidence": 0.9,
+            "why": "Accessible name is stable across branded tenants of the same vendor app."
+          },
+          {
+            "strategy": "css",
+            "role": null,
+            "name": null,
+            "text": null,
+            "placeholder": null,
+            "css": "a:nth-of-type(1)",
+            "nth": 0,
+            "confidence": 0.25,
+            "why": "Last-resort CSS; expected to break across tenants and versions."
+          }
+        ],
+        "frame": "nav"
+      },
+      "input": null,
+      "extract_as": null,
+      "navigate_url": null,
+      "key": null,
+      "wait": {
+        "until": "visible",
+        "text": null,
+        "url_contains": null,
+        "timeout_ms": 8000
+      },
+      "risk": "reversible",
+      "notes": ""
+    },
+    {
+      "id": "s5_type",
+      "action": "type",
+      "description": "Fill member ID from the goal.",
+      "target": {
+        "locators": [
+          {
+            "strategy": "adjacent_text",
+            "role": "textbox",
+            "name": null,
+            "text": "Member ID",
+            "placeholder": null,
+            "css": null,
+            "nth": 0,
+            "confidence": 0.82,
+            "why": "Legacy table forms label controls in the previous cell, not via <label>."
+          },
+          {
+            "strategy": "css",
+            "role": null,
+            "name": null,
+            "text": null,
+            "placeholder": null,
+            "css": "input[name=\"memid\"]",
+            "nth": 0,
+            "confidence": 0.25,
+            "why": "Last-resort CSS; expected to break across tenants and versions."
+          }
+        ],
+        "frame": "main"
+      },
+      "input": {
+        "from_parameter": "member_id",
+        "literal": null,
+        "secret_env": null
+      },
+      "extract_as": null,
+      "navigate_url": null,
+      "key": null,
+      "wait": {
+        "until": "visible",
+        "text": null,
+        "url_contains": null,
+        "timeout_ms": 8000
+      },
+      "risk": "reversible",
+      "notes": ""
+    },
+    {
+      "id": "s6_click",
+      "action": "click",
+      "description": "Submit member lookup.",
+      "target": {
+        "locators": [
+          {
+            "strategy": "role_name",
+            "role": "button",
+            "name": "Go",
+            "text": null,
+            "placeholder": null,
+            "css": null,
+            "nth": 0,
+            "confidence": 0.9,
+            "why": "Accessible name is stable across branded tenants of the same vendor app."
+          },
+          {
+            "strategy": "css",
+            "role": null,
+            "name": null,
+            "text": null,
+            "placeholder": null,
+            "css": "input:nth-of-type(1)",
+            "nth": 0,
+            "confidence": 0.25,
+            "why": "Last-resort CSS; expected to break across tenants and versions."
+          }
+        ],
+        "frame": "main"
+      },
+      "input": null,
+      "extract_as": null,
+      "navigate_url": null,
+      "key": null,
+      "wait": {
+        "until": "visible",
+        "text": null,
+        "url_contains": null,
+        "timeout_ms": 8000
+      },
+      "risk": "reversible",
+      "notes": ""
+    },
+    {
+      "id": "s7_click",
+      "action": "click",
+      "description": "Open the member record.",
+      "target": {
+        "locators": [
+          {
+            "strategy": "role_name",
+            "role": "link",
+            "name": "View Record",
+            "text": null,
+            "placeholder": null,
+            "css": null,
+            "nth": 0,
+            "confidence": 0.9,
+            "why": "Accessible name is stable across branded tenants of the same vendor app."
+          },
+          {
+            "strategy": "adjacent_text",
+            "role": "link",
+            "name": null,
+            "text": "active",
+            "placeholder": null,
+            "css": null,
+            "nth": 0,
+            "confidence": 0.82,
+            "why": "Legacy table forms label controls in the previous cell, not via <label>."
+          },
+          {
+            "strategy": "css",
+            "role": null,
+            "name": null,
+            "text": null,
+            "placeholder": null,
+            "css": "a:nth-of-type(1)",
+            "nth": 0,
+            "confidence": 0.25,
+            "why": "Last-resort CSS; expected to break across tenants and versions."
+          }
+        ],
+        "frame": "main"
+      },
+      "input": null,
+      "extract_as": null,
+      "navigate_url": null,
+      "key": null,
+      "wait": {
+        "until": "visible",
+        "text": null,
+        "url_contains": null,
+        "timeout_ms": 8000
+      },
+      "risk": "reversible",
+      "notes": ""
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "has_outputs",
+      "after_step": null,
+      "description": "Replay produced the declared outputs or a known business outcome.",
+      "assert_kind": "text_contains",
+      "text": "",
+      "url_contains": null,
+      "target": null
+    },
+    {
+      "id": "on_member_record",
+      "after_step": null,
+      "description": "Member record screen is showing.",
+      "assert_kind": "text_contains",
+      "text": "Member Record",
+      "url_contains": null,
+      "target": null
+    }
+  ],
+  "outcomes": [
+    {
+      "code": "MEMBER_NOT_FOUND",
+      "kind": "business",
+      "description": "No member record matches the supplied member ID.",
+      "match_text": "No matching member found",
+      "recover_action": "none"
+    },
+    {
+      "code": "MEMBER_CLOSED",
+      "kind": "business",
+      "description": "Membership exists but is closed; inquiry only.",
+      "match_text": "Membership is closed",
+      "recover_action": "none"
+    },
+    {
+      "code": "VALIDATION_ERROR",
+      "kind": "business",
+      "description": "Form failed field validation.",
+      "match_text": "Please correct the highlighted fields",
+      "recover_action": "none"
+    },
+    {
+      "code": "INSUFFICIENT_FUNDS",
+      "kind": "business",
+      "description": "Transfer amount exceeds available balance.",
+      "match_text": "Insufficient funds",
+      "recover_action": "none"
+    },
+    {
+      "code": "SESSION_EXPIRED",
+      "kind": "recoverable",
+      "description": "Teller session timed out.",
+      "match_text": "Your session has expired",
+      "recover_action": "escalate"
+    },
+    {
+      "code": "BATCH_INTERSTITIAL",
+      "kind": "recoverable",
+      "description": "Nightly core-processing overlay.",
+      "match_text": "Core processing window in progress",
+      "recover_action": "dismiss"
+    }
+  ],
+  "recorded_from_goal": "look up member 12345 and read their current savings balance",
+  "recorded_at": "2026-09-20T03:42:01.421087+00:00"
+}

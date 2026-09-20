@@ -1,0 +1,13 @@
+{
+  "kind": "business_outcome",
+  "capability_id": "heritage_core.lookup_savings_balance",
+  "goal": null,
+  "outputs": {},
+  "business_code": "MEMBER_NOT_FOUND",
+  "business_message": "No member record matches the supplied member ID.",
+  "error": null,
+  "intervention_id": null,
+  "evidence_dir": "/Users/srijapentyala/Interface.io/evidence/replay_not_found",
+  "steps_executed": 6,
+  "llm_calls": 0
+}

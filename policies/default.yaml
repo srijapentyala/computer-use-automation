@@ -1,0 +1,68 @@
+# Safety policy for the Heritage Core stand-in and any allowlisted host.
+# The agent and the replay engine both consult this file before acting.
+
+policy_id: heritage_core.default
+version: 1
+
+allowed_hosts:
+  - 127.0.0.1
+  - localhost
+
+allowed_url_prefixes:
+  - http://127.0.0.1
+  - http://localhost
+
+allowed_actions:
+  - navigate
+  - click
+  - type
+  - select
+  - press
+  - extract
+  - dismiss
+  - wait
+  - screenshot
+  - done
+  - escalate
+
+# Action types the model/replay may never emit, even if the UI offers them.
+denied_actions:
+  - download
+  - file_upload
+  - eval_js
+  - raw_cdp
+
+# Hosts the agent must never open, even via a link in an allowlisted app.
+blocked_hosts:
+  - example-attacker.test
+
+irreversible_actions:
+  # Clicking these, or submitting forms whose accessible name matches, is risky.
+  name_patterns:
+    - "(?i)transfer funds"
+    - "(?i)submit transfer"
+    - "(?i)close (membership|account)"
+    - "(?i)post(ing)? (transaction|debit)"
+    - "(?i)cannot be undone"
+  path_patterns:
+    - "/transfer"
+    - "/close"
+  # Conservative default: block unattended irreversible clicks; escalate instead.
+  on_match: escalate
+
+sensitive_fields:
+  - password
+  - passwd
+  - ssn
+  - social
+  - account_number
+  - routing
+  - token
+  - authorization
+  - secret
+  - pin
+
+max_steps: 25
+step_timeout_ms: 15000
+idle_timeout_ms: 120000
+loop_repeat_limit: 3

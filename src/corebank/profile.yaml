@@ -1,0 +1,42 @@
+# App profile: known business outcomes and risk notes for Heritage Core.
+# Artifacts bind to a vendor app, not a tenant. Tenant overrides live on the artifact.
+app_id: heritage_core
+vendor: heritage
+surface: web
+title: Heritage Core Teller Console
+entry_path: /
+
+credentials:
+  username_env: COREBANK_USER
+  default_username: teller
+  # Password is never stored on an artifact; discovery types it then redacts it.
+
+known_outcomes:
+  - code: MEMBER_NOT_FOUND
+    kind: business
+    description: No member record matches the supplied member ID.
+    match_text: "No matching member found"
+  - code: MEMBER_CLOSED
+    kind: business
+    description: Membership exists but is closed; inquiry only.
+    match_text: "Membership is closed"
+  - code: VALIDATION_ERROR
+    kind: business
+    description: Form failed field validation.
+    match_text: "Please correct the highlighted fields"
+  - code: INSUFFICIENT_FUNDS
+    kind: business
+    description: Transfer amount exceeds available balance.
+    match_text: "Insufficient funds"
+  - code: SESSION_EXPIRED
+    kind: recoverable
+    description: Teller session timed out.
+    match_text: "Your session has expired"
+  - code: BATCH_INTERSTITIAL
+    kind: recoverable
+    description: Nightly core-processing overlay. Dismiss and continue.
+    match_text: "Core processing window in progress"
+
+risk:
+  read_paths: ["/", "/search", "/member"]
+  irreversible_paths: ["/transfer"]

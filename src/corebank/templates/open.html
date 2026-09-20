@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" href="/static/legacy.css">
+</head>
+<body>
+  <div class="banner">Open Sub-Account</div>
+  <div class="page">
+    {% if error %}<div class="err">Please correct the highlighted fields. {{ error }}</div>{% endif %}
+    {% if not member %}
+      <p class="err">No member in context. Locate a member first.</p>
+      <p><a href="/search">Member Search</a></p>
+    {% else %}
+      <p>Opening a product for member <b>{{ member.member_id }}</b> — {{ member.name }}.</p>
+      <form method="post" action="/open">
+        <table class="tbl">
+          <tr class="hdr"><td colspan="2">New Share</td></tr>
+          <tr>
+            <td>Product:</td>
+            <td>
+              <select name="prod">
+                <option value="Savings">Savings</option>
+                <option value="Money Market">Money Market</option>
+              </select>
+            </td>
+          </tr>
+          <tr>
+            <td>Nickname:</td>
+            <td><input type="text" name="nick" value=""></td>
+          </tr>
+          <tr>
+            <td>Opening deposit:</td>
+            <td><input type="text" name="dep" value=""></td>
+          </tr>
+          <tr>
+            <td colspan="2" style="text-align:right">
+              <input class="btn" type="submit" value="Submit Application">
+            </td>
+          </tr>
+        </table>
+      </form>
+    {% endif %}
+  </div>
+</body>
+</html>

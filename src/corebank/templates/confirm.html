@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" href="/static/legacy.css">
+</head>
+<body>
+  <div class="banner">Confirmation</div>
+  <div class="page">
+    <p class="ok">Sub-account opened.</p>
+    <table class="tbl">
+      <tr class="hdr"><td colspan="2">New Account Confirmation</td></tr>
+      <tr><td>Confirmation #:</td><td>{{ confirmation }}</td></tr>
+      <tr><td>Member ID:</td><td>{{ member.member_id }}</td></tr>
+      <tr><td>Product:</td><td>{{ product }}</td></tr>
+      <tr><td>Account:</td><td>{{ number }}</td></tr>
+      <tr><td>Opening deposit:</td><td>{{ deposit }}</td></tr>
+    </table>
+    <p><a href="/member?id={{ member.member_id }}">View Member Record</a></p>
+  </div>
+</body>
+</html>

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" href="/static/legacy.css">
+</head>
+<body>
+  <div class="banner">Funds Transfer</div>
+  <div class="page">
+    <p class="err">This action cannot be undone. Posted transfers are final.</p>
+    {% if error %}<div class="err">{{ error }}</div>{% endif %}
+    {% if not member %}
+      <p>No member in context. Locate a member first.</p>
+      <p><a href="/search">Member Search</a></p>
+    {% else %}
+      <form method="post" action="/transfer">
+        <table class="tbl">
+          <tr class="hdr"><td colspan="2">Post Transfer — {{ member.name }}</td></tr>
+          <tr>
+            <td>From account:</td>
+            <td>
+              <select name="src">
+                {% for acct in member.accounts %}
+                <option value="{{ acct.number }}">{{ acct.product }} {{ acct.number }} {{ money(acct.balance) }}</option>
+                {% endfor %}
+              </select>
+            </td>
+          </tr>
+          <tr>
+            <td>To account:</td>
+            <td>
+              <select name="dst">
+                {% for acct in member.accounts %}
+                <option value="{{ acct.number }}">{{ acct.product }} {{ acct.number }}</option>
+                {% endfor %}
+              </select>
+            </td>
+          </tr>
+          <tr>
+            <td>Amount:</td>
+            <td><input type="text" name="amt" value=""></td>
+          </tr>
+          <tr>
+            <td colspan="2" style="text-align:right">
+              <input class="btn" type="submit" value="Submit Transfer">
+            </td>
+          </tr>
+        </table>
+      </form>
+    {% endif %}
+  </div>
+</body>
+</html>

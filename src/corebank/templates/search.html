@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" href="/static/legacy.css">
+</head>
+<body>
+  <div class="banner">Member Inquiry</div>
+  <div class="page">
+    {% if error %}<div class="err">{{ error }}</div>{% endif %}
+    <form method="get" action="/search">
+      <table class="tbl">
+        <tr class="hdr"><td colspan="2">Lookup</td></tr>
+        <tr>
+          <td>Member ID:</td>
+          <td><input type="text" name="memid" value="{{ memid }}"></td>
+        </tr>
+        <tr>
+          <td>SSN last 4:</td>
+          <td><input type="text" name="ssn4" value="" maxlength="4"></td>
+        </tr>
+        <tr>
+          <td>Last Name:</td>
+          <td><input type="text" name="lname" value=""></td>
+        </tr>
+        <tr>
+          <td colspan="2" style="text-align:right">
+            <input class="btn" type="submit" value="Go">
+          </td>
+        </tr>
+      </table>
+    </form>
+    {% if member %}
+      {% if member.status == "closed" %}
+        <p class="err">Membership is closed. Inquiry only.</p>
+      {% endif %}
+      <p>1 matching record.</p>
+      <table class="tbl">
+        <tr>
+          <th>Member ID</th>
+          <th>Name</th>
+          <th>Status</th>
+          <th></th>
+        </tr>
+        <tr>
+          <td>{{ member.member_id }}</td>
+          <td>{{ member.name }}</td>
+          <td>{{ member.status }}</td>
+          <td><a href="/member?id={{ member.member_id }}">View Record</a></td>
+        </tr>
+      </table>
+    {% endif %}
+  </div>
+</body>
+</html>

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" href="/static/legacy.css">
+</head>
+<body>
+  <div class="banner">Member Record</div>
+  <div class="page">
+    <table class="tbl" style="margin-bottom:12px">
+      <tr class="hdr"><td colspan="2">CIF Header</td></tr>
+      <tr><td>Member ID:</td><td>{{ member.member_id }}</td></tr>
+      <tr><td>Name:</td><td>{{ member.name }}</td></tr>
+      <tr><td>Status:</td><td class="{{ 'closed' if member.status=='closed' else '' }}">{{ member.status }}</td></tr>
+      <tr><td>Opened:</td><td>{{ member.opened }}</td></tr>
+    </table>
+    <table class="tbl">
+      <tr class="hdr"><td colspan="4">Share / Draft Accounts</td></tr>
+      <tr>
+        <th>Product</th>
+        <th>Account</th>
+        <th>Balance</th>
+        <th></th>
+      </tr>
+      {% for acct in member.accounts %}
+      <tr>
+        <td>{{ acct.product }}</td>
+        <td>{{ acct.number }}</td>
+        <td>{{ money(acct.balance) }}</td>
+        <td></td>
+      </tr>
+      {% endfor %}
+    </table>
+    <p><a href="/search">Return to Search</a></p>
+  </div>
+</body>
+</html>

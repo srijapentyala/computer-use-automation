@@ -1,0 +1,16 @@
+{
+  "kind": "success",
+  "capability_id": "heritage_core.lookup_savings_balance",
+  "goal": null,
+  "outputs": {
+    "savings_balance": "$2,450.00",
+    "member_name": "Jane A. Doe"
+  },
+  "business_code": null,
+  "business_message": null,
+  "error": null,
+  "intervention_id": null,
+  "evidence_dir": "/Users/srijapentyala/Interface.io/evidence/replay_success",
+  "steps_executed": 7,
+  "llm_calls": 0
+}
