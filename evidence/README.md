@@ -11,14 +11,15 @@ Checked-in runs against the local Heritage Core teller console.
 
 The replay evidence is the production path and does not use a model.
 
-Discovery in this folder is a **live browser run** of the same observe→decide→act loop used by OpenAI/Anthropic/Ollama. The decide step used the grounded `scripted` adapter (no paid API). Replay folders are the production path: **0 LLM calls**.
+Discovery in this folder is a **genuine LLM-driven run** on the live Heritage Core UI via TAMUS AI Chat (`protected.gemini-2.5-flash-lite`, 8 model calls). Replay folders are the production path: **0 LLM calls**.
 
-To recapture with a local model instead:
+Recapture:
 
 ```bash
-brew install ollama && ollama serve &
-ollama pull llama3.2:3b
-CUAS_LLM=ollama python scripts/capture_evidence.py
+# TAMUS AI Chat (OpenAI-compatible)
+# .env: OPENAI_API_KEY, OPENAI_BASE_URL=https://chat-api.tamu.ai/api,
+#       OPENAI_MODEL=protected.gemini-2.5-flash-lite
+CUAS_LLM=openai python scripts/capture_evidence.py
 ```
 
 `evidence/discovery/llm.txt` records which provider produced that capture.

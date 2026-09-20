@@ -26,6 +26,38 @@ class Decision:
     raw: dict[str, Any] = field(default_factory=dict)
 
 
+def _message_content(resp: Any) -> str:
+    """TAMUS AI Chat sometimes returns SSE text even when stream=false."""
+    if hasattr(resp, "choices") and resp.choices:
+        msg = resp.choices[0].message
+        return (getattr(msg, "content", None) or "") or "{}"
+    if isinstance(resp, str):
+        parts: list[str] = []
+        for line in resp.splitlines():
+            line = line.strip()
+            if not line.startswith("data:"):
+                continue
+            payload = line[5:].strip()
+            if not payload or payload == "[DONE]":
+                continue
+            try:
+                obj = json.loads(payload)
+            except json.JSONDecodeError:
+                continue
+            choices = obj.get("choices") or []
+            if not choices:
+                continue
+            ch = choices[0]
+            msg = ch.get("message") or {}
+            if msg.get("content"):
+                parts.append(str(msg["content"]))
+            delta = ch.get("delta") or {}
+            if delta.get("content"):
+                parts.append(str(delta["content"]))
+        return "".join(parts) or "{}"
+    return "{}"
+
+
 def parse_decision(payload: str | dict[str, Any]) -> Decision:
     if isinstance(payload, dict):
         data = payload
@@ -108,6 +140,7 @@ class OpenAILLM:
         kwargs: dict[str, Any] = {
             "model": self.model,
             "temperature": 0,
+            "stream": False,
             "messages": [
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {
@@ -116,14 +149,14 @@ class OpenAILLM:
                 },
             ],
         }
-        # Some local OpenAI-compatible servers do not implement json_object.
-        if not self._local:
+        # Gemini/TAMUS and local servers often reject OpenAI json_object mode.
+        if self._json_object_mode:
             kwargs["response_format"] = {"type": "json_object"}
         last_error: Exception | None = None
         for _ in range(2):
             try:
                 response = await self.client.chat.completions.create(**kwargs)
-                content = response.choices[0].message.content or "{}"
+                content = _message_content(response)
                 return parse_decision(content)
             except Exception as exc:  # noqa: BLE001
                 last_error = exc
@@ -131,10 +164,11 @@ class OpenAILLM:
         raise last_error or RuntimeError("LLM decide failed")
 
     @property
-    def _local(self) -> bool:
-        base = getattr(self.client, "base_url", None)
-        host = str(base) if base is not None else ""
-        return "127.0.0.1" in host or "localhost" in host
+    def _json_object_mode(self) -> bool:
+        host = str(getattr(self.client, "base_url", "") or "")
+        if not host or "api.openai.com" in host:
+            return True
+        return False
 
 
 class AnthropicLLM:

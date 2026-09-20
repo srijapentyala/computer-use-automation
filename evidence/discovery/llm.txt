@@ -1,1 +1,1 @@
-provider=scripted calls=8
+provider=openai model=protected.gemini-2.5-flash-lite calls=8

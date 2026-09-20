@@ -3,8 +3,7 @@
   "capability_id": "heritage_core.lookup_savings_balance",
   "goal": "look up member 12345 and read their current savings balance",
   "outputs": {
-    "savings_balance": "$2,450.00",
-    "member_name": "Jane A. Doe"
+    "current_savings_balance": "$2,450.00"
   },
   "business_code": null,
   "business_message": null,

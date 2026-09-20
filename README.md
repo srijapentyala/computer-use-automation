@@ -19,7 +19,11 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install -e ".[dev]"
 python -m playwright install chromium
-cp .env.example .env   # then add OPENAI_API_KEY (or ANTHROPIC_API_KEY)
+cp .env.example .env
+# For TAMUS AI Chat:
+#   OPENAI_API_KEY=<your TAMUS key>
+#   OPENAI_BASE_URL=https://chat-api.tamu.ai/api
+#   OPENAI_MODEL=protected.gemini-2.5-flash-lite
 ```
 
 Replay, tests, and the operator handoff **do not need a model key**. Discovery against a live LLM does.

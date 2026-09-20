@@ -226,25 +226,33 @@ class ReplayEngine:
 
     def _harvest_outputs(self, cap: Capability, text: str) -> dict[str, str]:
         found: dict[str, str] = {}
-        names = {s.name for s in cap.outputs}
-        if "savings_balance" in names:
-            m = re.search(r"Savings.*?(\$[\d,]+\.\d{2})", text, re.S)
-            if m:
-                found["savings_balance"] = m.group(1)
-        if "member_name" in names:
-            m = re.search(r"Name:\s*([^\n]+)", text)
-            if m and m.group(1).strip():
-                found["member_name"] = m.group(1).strip()
-            else:
-                lines = [ln.strip() for ln in text.splitlines() if ln.strip()]
-                for i, ln in enumerate(lines):
-                    if ln.lower().rstrip(":") == "name" and i + 1 < len(lines):
-                        found["member_name"] = lines[i + 1]
-                        break
-        if "confirmation_number" in names:
-            m = re.search(r"Confirmation\s*#:\s*(\S+)", text)
-            if m:
-                found["confirmation_number"] = m.group(1).strip()
+        savings = None
+        m = re.search(r"Savings.*?(\$[\d,]+\.\d{2})", text, re.S)
+        if m:
+            savings = m.group(1)
+        name = None
+        m = re.search(r"Name:\s*([^\n]+)", text)
+        if m and m.group(1).strip():
+            name = m.group(1).strip()
+        else:
+            lines = [ln.strip() for ln in text.splitlines() if ln.strip()]
+            for i, ln in enumerate(lines):
+                if ln.lower().rstrip(":") == "name" and i + 1 < len(lines):
+                    name = lines[i + 1]
+                    break
+        confirmation = None
+        m = re.search(r"Confirmation\s*#:\s*(\S+)", text)
+        if m:
+            confirmation = m.group(1).strip()
+
+        for spec in cap.outputs:
+            key = spec.name.lower()
+            if savings and ("savings" in key and "balance" in key or spec.type == "money"):
+                found[spec.name] = savings
+            elif name and ("name" in key and "member" in key or key in {"name", "member_name"}):
+                found[spec.name] = name
+            elif confirmation and "confirm" in key:
+                found[spec.name] = confirmation
         return found
 
     def _check_checkpoints(

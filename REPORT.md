@@ -75,4 +75,4 @@ What I would build next: (1) bounded one-step heal that writes a *proposed* tena
 
 What I kept thin but real: the operator console (ugly, but the control-transfer model is complete), the catalog HTTP surface (lists contracts and accepts invoke payloads; the CLI/library owns the browser).
 
-LLM provider is a seam (`openai` / `anthropic` / `ollama` / `scripted`). Checked-in discovery evidence is a live-UI run through that seam without a paid host; replay evidence is the unattended production path and does not use a model.
+LLM provider is a seam (`openai` / `anthropic` / `ollama` / `scripted`). Checked-in discovery evidence is a live TAMUS AI Chat (`gemini-2.5-flash-lite`) run through that seam; replay evidence is the unattended production path and does not use a model.

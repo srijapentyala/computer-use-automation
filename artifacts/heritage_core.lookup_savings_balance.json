@@ -23,7 +23,7 @@
       "name": "member_id",
       "type": "string",
       "required": true,
-      "description": "Input captured during discovery (Fill member ID from the goal.)",
+      "description": "Input captured during discovery (The user wants to look up member 12345. I have logged in and am on the Member Inquiry page. I need to enter the Member ID into the 'Member ID:' field and click 'Go'.)",
       "pattern": "^[0-9]{4,8}$",
       "enum": null,
       "example": "12345",
@@ -32,14 +32,8 @@
   ],
   "outputs": [
     {
-      "name": "savings_balance",
+      "name": "current_savings_balance",
       "type": "money",
-      "description": "Extracted during discovery (example redacted in logs).",
-      "sensitive": false
-    },
-    {
-      "name": "member_name",
-      "type": "string",
       "description": "Extracted during discovery (example redacted in logs).",
       "sensitive": false
     }
@@ -49,7 +43,7 @@
     {
       "id": "s1_type",
       "action": "type",
-      "description": "Sign in as teller.",
+      "description": "The user wants to look up a member. I need to log in first using the provided demo credentials.",
       "target": {
         "locators": [
           {
@@ -97,7 +91,7 @@
     {
       "id": "s2_type",
       "action": "type",
-      "description": "Enter operator password.",
+      "description": "I have entered the operator ID. Now I need to enter the password and click Sign On.",
       "target": {
         "locators": [
           {
@@ -145,7 +139,7 @@
     {
       "id": "s3_click",
       "action": "click",
-      "description": "Submit sign-on.",
+      "description": "I have entered the operator ID and password. Now I need to click Sign On to log in.",
       "target": {
         "locators": [
           {
@@ -189,7 +183,7 @@
     {
       "id": "s4_click",
       "action": "click",
-      "description": "Go to member search.",
+      "description": "The user wants to look up a member. I have logged in and the workstation is ready. I need to click on 'Member Search' to proceed.",
       "target": {
         "locators": [
           {
@@ -233,7 +227,7 @@
     {
       "id": "s5_type",
       "action": "type",
-      "description": "Fill member ID from the goal.",
+      "description": "The user wants to look up member 12345. I have logged in and am on the Member Inquiry page. I need to enter the Member ID into the 'Member ID:' field and click 'Go'.",
       "target": {
         "locators": [
           {
@@ -281,7 +275,7 @@
     {
       "id": "s6_click",
       "action": "click",
-      "description": "Submit member lookup.",
+      "description": "The user wants to look up member 12345. I have entered the member ID in the 'Member ID:' field. Now I need to click the 'Go' button to initiate the search.",
       "target": {
         "locators": [
           {
@@ -325,7 +319,7 @@
     {
       "id": "s7_click",
       "action": "click",
-      "description": "Open the member record.",
+      "description": "The member 12345 has been found and is active. I need to click on 'View Record' to see the member's details and their savings balance.",
       "target": {
         "locators": [
           {
@@ -387,15 +381,6 @@
       "text": "",
       "url_contains": null,
       "target": null
-    },
-    {
-      "id": "on_member_record",
-      "after_step": null,
-      "description": "Member record screen is showing.",
-      "assert_kind": "text_contains",
-      "text": "Member Record",
-      "url_contains": null,
-      "target": null
     }
   ],
   "outcomes": [
@@ -443,5 +428,5 @@
     }
   ],
   "recorded_from_goal": "look up member 12345 and read their current savings balance",
-  "recorded_at": "2026-09-20T03:42:01.421087+00:00"
+  "recorded_at": "2026-09-20T13:16:26.747712+00:00"
 }

@@ -1,8 +1,8 @@
-{"ts": "2026-09-20T03:42:06.037846+00:00", "n": 1, "event": "replay_start", "capability_id": "heritage_core.lookup_savings_balance", "params": {"member_id": "99999"}}
-{"ts": "2026-09-20T03:42:06.363856+00:00", "n": 2, "event": "step_ok", "step_id": "s1_type", "action": "type"}
-{"ts": "2026-09-20T03:42:06.605058+00:00", "n": 3, "event": "step_ok", "step_id": "s2_type", "action": "type"}
-{"ts": "2026-09-20T03:42:07.279513+00:00", "n": 4, "event": "step_ok", "step_id": "s3_click", "action": "click"}
-{"ts": "2026-09-20T03:42:07.974700+00:00", "n": 5, "event": "step_ok", "step_id": "s4_click", "action": "click"}
-{"ts": "2026-09-20T03:42:08.251831+00:00", "n": 6, "event": "step_ok", "step_id": "s5_type", "action": "type"}
-{"ts": "2026-09-20T03:42:08.904270+00:00", "n": 7, "event": "step_ok", "step_id": "s6_click", "action": "click"}
-{"ts": "2026-09-20T03:42:09.123516+00:00", "n": 8, "event": "outcome_detected", "code": "MEMBER_NOT_FOUND", "kind": "business", "step": "s7_click"}
+{"ts": "2026-09-20T13:16:59.966202+00:00", "n": 1, "event": "replay_start", "capability_id": "heritage_core.lookup_savings_balance", "params": {"member_id": "99999"}}
+{"ts": "2026-09-20T13:17:00.273629+00:00", "n": 2, "event": "step_ok", "step_id": "s1_type", "action": "type"}
+{"ts": "2026-09-20T13:17:00.515081+00:00", "n": 3, "event": "step_ok", "step_id": "s2_type", "action": "type"}
+{"ts": "2026-09-20T13:17:01.189680+00:00", "n": 4, "event": "step_ok", "step_id": "s3_click", "action": "click"}
+{"ts": "2026-09-20T13:17:01.884931+00:00", "n": 5, "event": "step_ok", "step_id": "s4_click", "action": "click"}
+{"ts": "2026-09-20T13:17:02.161534+00:00", "n": 6, "event": "step_ok", "step_id": "s5_type", "action": "type"}
+{"ts": "2026-09-20T13:17:02.812820+00:00", "n": 7, "event": "step_ok", "step_id": "s6_click", "action": "click"}
+{"ts": "2026-09-20T13:17:03.033120+00:00", "n": 8, "event": "outcome_detected", "code": "MEMBER_NOT_FOUND", "kind": "business", "step": "s7_click"}
